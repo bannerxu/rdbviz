@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RDB 可视化分析</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Redis RDB · 流式统计</div>
+        <h1>RDB Key 情况分析面板</h1>
+        <p class="sub">低内存、面向大 RDB 的可视化统计。支持前缀聚合、TTL 分布、BigKey 排行与类型占比。</p>
+      </div>
+      <div class="upload">
+        <label class="upload-btn">
+          选择 report.json
+          <input type="file" accept="application/json" @change="onFile" />
+        </label>
+        <div class="upload-hint">或直接在本目录启动静态服务，默认加载 data/report.json</div>
+      </div>
+    </header>
+
+    <section v-if="loading" class="panel">加载中...</section>
+    <section v-else-if="error" class="panel error">{{ error }}</section>
+
+    <section v-else class="grid">
+      <div class="card">
+        <div class="card-title">总 Key 数</div>
+        <div class="card-value">{{ formatInt(report.summary.total_keys) }}</div>
+        <div class="card-sub">DB 数量：{{ report.summary.db_count }}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">总大小</div>
+        <div class="card-value">{{ formatBytes(report.summary.total_size) }}</div>
+        <div class="card-sub">RDB 来源：{{ report.meta.source }}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">带过期时间</div>
+        <div class="card-value">{{ formatInt(report.summary.with_ttl) }}</div>
+        <div class="card-sub">已过期：{{ formatInt(report.summary.expired) }}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Redis 版本</div>
+        <div class="card-value">{{ report.meta.redis_version || 'N/A' }}</div>
+        <div class="card-sub">生成时间：{{ report.meta.ctime || report.meta.generated_at }}</div>
+      </div>
+
+      <div class="panel span-6">
+        <div class="panel-title">类型占比（按大小）</div>
+        <div id="chart-type" class="chart"></div>
+      </div>
+      <div class="panel span-6">
+        <div class="panel-title">TTL 分布</div>
+        <div id="chart-ttl" class="chart"></div>
+      </div>
+
+      <div class="panel span-6">
+        <div class="panel-title">Key 大小分布</div>
+        <div id="chart-size" class="chart"></div>
+      </div>
+      <div class="panel span-6">
+        <div class="panel-title">DB 分布</div>
+        <div id="chart-db" class="chart"></div>
+      </div>
+
+      <div class="panel span-12">
+        <div class="panel-title">
+          前缀 TopN（按大小，按类型筛选）
+          <select class="select" v-model="prefixType">
+            <option value="__all__">全部</option>
+            <option v-for="t in typeOptions" :key="t" :value="t">{{ t }}</option>
+          </select>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>前缀</th>
+              <th>Key 数</th>
+              <th>总大小</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="p in prefixTable" :key="p.prefix">
+              <td class="mono">{{ p.prefix }}</td>
+              <td>{{ formatInt(p.count) }}</td>
+              <td>{{ formatBytes(p.size) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel span-12">
+        <div class="panel-title">BigKey TopN（按大小）</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>DB</th>
+              <th>Key</th>
+              <th>类型</th>
+              <th>大小</th>
+              <th>元素数</th>
+              <th>编码</th>
+              <th>过期时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="k in report.bigkeys" :key="k.db + ':' + k.key">
+              <td>{{ k.db }}</td>
+              <td class="mono">{{ k.key }}</td>
+              <td>{{ k.type }}</td>
+              <td>{{ formatBytes(k.size) }}</td>
+              <td>{{ formatInt(k.elements) }}</td>
+              <td>{{ k.encoding }}</td>
+              <td>{{ k.expiration ? new Date(k.expiration).toLocaleString() : '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
