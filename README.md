@@ -2,6 +2,11 @@
 
 低内存、流式解析 Redis RDB 文件，并通过 Vue 页面可视化展示 key 分布、TTL 分布、BigKey、前缀统计等。
 
+## 截图
+
+![dashboard](doc/images/dashboard.png)
+![dashboard-2](doc/images/dashboard-2.png)
+
 ## 功能
 
 - 总 key 数 / 总大小 / DB 分布
@@ -16,7 +21,7 @@
 ### 1. 生成报告（JSON）
 
 ```bash
-cd /Users/xgl/GolandProjects/rdr/rdbviz-tool
+cd rdbviz-tool
 
 go mod tidy
 
@@ -41,13 +46,17 @@ go run . \
 ### 2. 启动可视化页面
 
 ```bash
-cd /Users/xgl/GolandProjects/rdr/rdbviz
+cd rdbviz
 python3 -m http.server 8080
 ```
 
 浏览器访问 `http://localhost:8080`。
 
 也可以不启动服务，直接在页面上选择 `report.json` 文件加载。
+
+## 文档
+
+- 使用说明：`doc/USAGE.md`
 
 ## 注意事项
 

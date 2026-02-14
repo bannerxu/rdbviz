@@ -11,7 +11,7 @@
 目录结构：
 
 ```
-/Users/xgl/GolandProjects/rdr
+.
 ├── dump.rdb
 ├── rdbviz-tool
 │   ├── go.mod
@@ -29,7 +29,7 @@
 进入解析器目录并执行：
 
 ```bash
-cd /Users/xgl/GolandProjects/rdr/rdbviz-tool
+cd rdbviz-tool
 
 go mod tidy
 
@@ -54,7 +54,7 @@ go run . \
 ## 启动可视化页面
 
 ```bash
-cd /Users/xgl/GolandProjects/rdr/rdbviz
+cd rdbviz
 python3 -m http.server 8080
 ```
 
@@ -75,3 +75,4 @@ python3 -m http.server 8080
 
 - 如果解析失败：确认 `dump.rdb` 是否完整、是否为 Redis 7.x 版本导出。
 - 如果页面加载失败：确认 `rdbviz/data/report.json` 是否存在。
+
